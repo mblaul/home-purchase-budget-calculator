@@ -7,8 +7,6 @@ body {
   height: 100vh;
   margin: 0;
 
-  align-content: center;
-
   color: var(--color-off-black);
   background-color: darkslategray;
   font: 1.2em/1.5 "Arial";
