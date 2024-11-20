@@ -1,0 +1,239 @@
+* {
+  box-sizing: border-box !important;
+}
+
+body {
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+
+  align-content: center;
+
+  color: var(--color-off-black);
+  background-color: darkslategray;
+  font: 1.2em/1.5 "Arial";
+  letter-spacing: -0.5px;
+  overflow: hidden;
+
+  --color-off-black: rgb(15, 15, 15);
+  --color-soft-grey: rgb(236, 236, 236);
+  --color-yellow: rgb(255, 248, 222);
+
+  --font-small: 0.75em/1.5 "Arial";
+
+  --border-radius: 0.2em;
+  --soft-shadow: 0px 0px 5px -2px var(--color-off-black);
+  --medium-shadow: 0 0 1em -4px var(--color-off-black);
+}
+
+main {
+  max-width: 100%;
+  max-height: 100%;
+  padding: 0.15em;
+  display: flex;
+  flex-direction: column;
+  gap: 2em;
+  justify-content: center;
+  align-items: center;
+}
+
+input {
+  width: 100%;
+}
+
+input[type="number"] {
+  height: 3rem;
+  color: var(--color-off-black);
+  font: 1.2em/1.5 "Arial";
+  border-radius: var(--border-radius);
+  border: 2px solid var(--color-off-black);
+}
+
+label {
+  letter-spacing: 2px;
+  color: var(--color-off-black);
+  font: 100 0.8em/1.5 "Arial";
+}
+
+button {
+  color: var(--color-off-black);
+  background-color: rgb(251, 182, 130);
+  font: 700 1.1em/1.5 "Arial";
+  border-radius: var(--border-radius);
+  border: 3px solid var(--color-off-black);
+  cursor: pointer;
+  padding: 0.5em;
+  height: 4rem;
+}
+
+#enter-amounts-wrapper {
+  padding: 0.5em;
+}
+
+#enter-amounts-container {
+  background-color: rgb(255, 248, 222);
+  padding: 0.5em;
+  border-radius: var(--border-radius);
+  border: 3px solid var(--color-off-black);
+
+  box-shadow: var(--medium-shadow);
+
+  animation: fadeIn 0.33s ease-in-out forwards;
+}
+
+#enter-amounts {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+  padding: 2em;
+  background-color: white;
+  border-radius: var(--border-radius);
+  border: 2px solid var(--color-off-black);
+
+  box-shadow: var(--soft-shadow);
+}
+
+.input-field-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25em;
+}
+
+#play-with-rates {
+  overflow: auto;
+  background-color: rgb(255, 248, 222);
+  padding: 0.5em;
+  border-radius: var(--border-radius);
+  border: 3px solid var(--color-off-black);
+  gap: 1em;
+  flex-wrap: wrap;
+
+  box-shadow: var(--medium-shadow);
+
+  @media (width >= 1250px) {
+    width: 80%;
+    flex-wrap: nowrap;
+    overflow: hidden;
+  }
+
+  & > * {
+    flex: auto;
+  }
+}
+
+#sliders {
+  display: flex;
+  justify-content: space-between;
+  gap: 2em;
+  background-color: white;
+  border: 2px solid var(--color-off-black);
+  border-radius: var(--border-radius);
+  width: 50%;
+  padding: 1em;
+
+  box-shadow: var(--soft-shadow);
+
+  @media (width >= 1250px) {
+    flex-direction: column;
+    justify-content: unset;
+  }
+}
+
+#savings-inputs {
+  display: flex;
+  flex-direction: column;
+}
+
+#expenses {
+  display: flex;
+  flex-direction: column;
+}
+
+#rates {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+  background-color: white;
+  border: 2px solid var(--color-off-black);
+  border-radius: var(--border-radius);
+  width: 50%;
+  padding: 0.5em;
+
+  box-shadow: var(--soft-shadow);
+}
+
+#house-rates-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  overflow: auto;
+}
+
+#house-rates {
+  border: 1px solid var(--color-off-black);
+  border-radius: var(--border-radius);
+
+  @media (width >= 1250px) {
+    max-height: 100%;
+    overflow: auto;
+  }
+}
+
+#expanded-row-info {
+  padding: 0.5em;
+  background-color: var(--color-soft-grey);
+  border-bottom: 1px solid var(--color-off-black);
+  font: var(--font-small);
+  letter-spacing: 0px;
+
+  box-shadow: inset 0 0 2px 0;
+}
+
+.big-amount {
+  font: 700 1.6em/1.5 "Arial";
+}
+
+/* Table */
+.row {
+  display: flex;
+  padding: 0.25em 0.5em;
+  &:not(:last-child) {
+    border-bottom: 0.5px solid var(--color-off-black);
+  }
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.cell {
+  flex-basis: 33%;
+}
+
+/* Utility */
+.hidden {
+  opacity: 0;
+  display: none;
+}
+
+.visible {
+  opacity: 1;
+  display: flex;
+
+  animation: fadeIn 0.33s ease-in-out forwards;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  75% {
+    opacity: 0.6;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
