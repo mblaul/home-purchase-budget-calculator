@@ -2,10 +2,16 @@
   box-sizing: border-box !important;
 }
 
+html {
+  height: 100vh;
+  width: 100vw;
+}
+
 body {
   width: 100vw;
   height: 100vh;
   margin: 0;
+  align-content: center;
 
   color: var(--color-off-black);
   background-color: darkslategray;
