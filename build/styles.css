@@ -40,12 +40,13 @@ input {
   width: 100%;
 }
 
-input[type="number"] {
+input[type="text"] {
   height: 3rem;
   color: var(--color-off-black);
   font: 1.2em/1.5 "Arial";
   border-radius: var(--border-radius);
   border: 2px solid var(--color-off-black);
+  padding-left: 1em;
 }
 
 label {
@@ -81,6 +82,7 @@ button {
 }
 
 #enter-amounts {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 1em;
@@ -96,6 +98,16 @@ button {
   display: flex;
   flex-direction: column;
   gap: 0.25em;
+}
+
+.input-wrapper {
+  position: relative;
+}
+
+.input-currency-symbol {
+  position: absolute;
+  padding: 0.33em;
+  font: 1.2em/1.5 "Arial";
 }
 
 #play-with-rates {

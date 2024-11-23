@@ -1,10 +1,12 @@
 import type { DownPaymentOption } from "./types";
-import { UsDollar, Percent } from "./utils";
+import { UsDollar, Percent, getCurrencyTextInput } from "./utils";
 
 const HOUSE_PRICES = [300_000, 350_000, 400_000, 450_000, 500_000];
 const DOWN_PAYMENT_PERCENTS = [0.1, 0.15, 0.2];
 
 function init() {
+  setupEnterAmountsPage();
+
   const seeRatesButtonEl = document.getElementById("see-rates-button");
   if (!seeRatesButtonEl) return;
 
@@ -26,6 +28,24 @@ function init() {
 
     listenForRowClicks();
   });
+}
+
+function setupEnterAmountsPage() {
+  const enterAmountsEl = document.getElementById("enter-amounts");
+  const savingsInputElement = getCurrencyTextInput({
+    id: "initial-savings-input",
+    label: "Savings",
+  });
+
+  enterAmountsEl?.insertBefore(savingsInputElement, enterAmountsEl.firstChild);
+
+  savingsInputElement.insertAdjacentElement(
+    "afterend",
+    getCurrencyTextInput({
+      id: "initial-expenses-input",
+      label: "Monthly Expenses",
+    })
+  );
 }
 
 function setupRatesPageInputs() {
@@ -51,21 +71,23 @@ function setupRatesPageInputs() {
   )
     return;
 
-  savingsInputEl.max = (
-    (parseInt(initialSavingsInputEl.value) || 0) * 2
-  ).toString();
-  savingsInputEl.value = initialSavingsInputEl.value;
+  const parsedSavingsInputValue = Number(
+    initialSavingsInputEl.value.replace(/[^0-9]/g, "")
+  );
 
-  expensesInputEl.max = (
-    (parseInt(initialExpensesInputEl.value) || 0) * 2
-  ).toString();
-  expensesInputEl.value = initialExpensesInputEl.value;
+  const parsedExpensesInputValue = Number(
+    initialExpensesInputEl.value.replace(/[^0-9]/g, "")
+  );
+
+  savingsInputEl.max = (parsedSavingsInputValue * 2).toString();
+  savingsInputEl.value = parsedSavingsInputValue.toString();
+
+  expensesInputEl.max = (parsedExpensesInputValue * 2).toString();
+  expensesInputEl.value = initialExpensesInputEl.value.replace(/[^0-9]/g, "");
 
   const savingsAmountEl = document.getElementById("savings-amount");
   if (!savingsAmountEl) return;
-  savingsAmountEl.innerText = UsDollar.format(
-    parseInt(initialSavingsInputEl.value)
-  );
+  savingsAmountEl.innerText = UsDollar.format(parsedSavingsInputValue);
 
   const oneMonthExpensesExpensesEl = document.getElementById(
     "one-month-expenses"
@@ -77,10 +99,10 @@ function setupRatesPageInputs() {
   if (!oneMonthExpensesExpensesEl || !sixMonthExpensesExpensesEl) return;
 
   oneMonthExpensesExpensesEl.innerHTML = UsDollar.format(
-    parseInt(initialExpensesInputEl.value) || 0
+    parsedExpensesInputValue
   );
   sixMonthExpensesExpensesEl.innerHTML = UsDollar.format(
-    (parseInt(initialExpensesInputEl.value) || 0) * 6
+    parsedExpensesInputValue * 6
   );
 }
 
@@ -225,15 +247,19 @@ function listenForRowClicks() {
   if (!houseRatesEl || !expensesInputEl) return;
   const monthlyExpensesAmount = parseInt(expensesInputEl.value);
 
-  let expandedRowInfo = document.getElementById("expanded-row-info");
-  if (expandedRowInfo) expandedRowInfo.remove();
-
-  expandedRowInfo = document.createElement("div");
-  expandedRowInfo.id = "expanded-row-info";
-
   houseRatesEl.addEventListener("click", (event) => {
     const clickedRow = (event.target as HTMLElement)?.parentElement;
     if (!clickedRow || !clickedRow.dataset.fullPrice) return;
+
+    let expandedRowInfo = document.getElementById("expanded-row-info");
+
+    if (clickedRow === expandedRowInfo?.previousSibling) {
+      expandedRowInfo.remove();
+      return;
+    }
+
+    expandedRowInfo = document.createElement("div");
+    expandedRowInfo.id = "expanded-row-info";
 
     const rowTotalHousePrice = parseInt(clickedRow.dataset.fullPrice ?? "");
     const rowDownPaymentAmount = parseInt(
@@ -249,8 +275,10 @@ function listenForRowClicks() {
       annualRate: 8.0,
     });
 
-    expandedRowInfo.innerHTML = `
-      30-Year Monthly Payment:<br>
+    const expandedRowDetails = document.createElement("div");
+    expandedRowDetails.id = "expanded-row-details";
+    expandedRowDetails.innerHTML = `
+     30-Year Monthly Payment:<br>
       ${UsDollar.format(monthlyPaymentAmount)}<br>
       Additional Monthly Expenses:<br>
       ${UsDollar.format(
@@ -265,6 +293,9 @@ function listenForRowClicks() {
       )}
       </div>
     `;
+
+    expandedRowInfo.innerHTML = "";
+    expandedRowInfo.appendChild(expandedRowDetails);
 
     clickedRow.insertAdjacentElement("afterend", expandedRowInfo);
   });

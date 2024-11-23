@@ -1,4 +1,36 @@
 // src/utils.ts
+function handleNumberInput(event) {
+  const inputElement = event.currentTarget;
+  inputElement.value = inputElement.value.replace(/[^0-9]/g, "");
+  if (inputElement.value === "")
+    return;
+  inputElement.value = Decimal.format(parseInt(inputElement.value));
+}
+function getCurrencyTextInput({
+  id,
+  label
+}) {
+  const containerElement = document.createElement("div");
+  containerElement.classList.add("input-field-container");
+  const labelElement = document.createElement("label");
+  labelElement.htmlFor = id;
+  labelElement.innerText = label;
+  containerElement.insertBefore(labelElement, containerElement.firstChild);
+  const inputWrapperElement = document.createElement("div");
+  inputWrapperElement.classList.add("input-wrapper");
+  containerElement.appendChild(inputWrapperElement);
+  const currencySymbolElement = document.createElement("div");
+  currencySymbolElement.classList.add("input-currency-symbol");
+  currencySymbolElement.innerText = "$";
+  inputWrapperElement.appendChild(currencySymbolElement);
+  const inputElement = document.createElement("input");
+  inputElement.id = id;
+  inputElement.type = "text";
+  inputElement.inputMode = "numeric";
+  inputWrapperElement.appendChild(inputElement);
+  inputElement.addEventListener("input", handleNumberInput);
+  return containerElement;
+}
 var UsDollar = Intl.NumberFormat("en-US", {
   style: "currency",
   currency: "USD",
@@ -8,9 +40,15 @@ var UsDollar = Intl.NumberFormat("en-US", {
 var Percent = Intl.NumberFormat("en-US", {
   style: "percent"
 });
+var Decimal = Intl.NumberFormat("en-US", {
+  style: "decimal",
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 0
+});
 
 // src/index.ts
 function init() {
+  setupEnterAmountsPage();
   const seeRatesButtonEl = document.getElementById("see-rates-button");
   if (!seeRatesButtonEl)
     return;
@@ -29,6 +67,18 @@ function init() {
     listenForRowClicks();
   });
 }
+function setupEnterAmountsPage() {
+  const enterAmountsEl = document.getElementById("enter-amounts");
+  const savingsInputElement = getCurrencyTextInput({
+    id: "initial-savings-input",
+    label: "Savings"
+  });
+  enterAmountsEl?.insertBefore(savingsInputElement, enterAmountsEl.firstChild);
+  savingsInputElement.insertAdjacentElement("afterend", getCurrencyTextInput({
+    id: "initial-expenses-input",
+    label: "Monthly Expenses"
+  }));
+}
 function setupRatesPageInputs() {
   const initialSavingsInputEl = document.getElementById("initial-savings-input");
   const initialExpensesInputEl = document.getElementById("initial-expenses-input");
@@ -36,20 +86,22 @@ function setupRatesPageInputs() {
   const expensesInputEl = document.getElementById("expenses-input");
   if (!initialSavingsInputEl || !initialExpensesInputEl || !savingsInputEl || !expensesInputEl)
     return;
-  savingsInputEl.max = ((parseInt(initialSavingsInputEl.value) || 0) * 2).toString();
-  savingsInputEl.value = initialSavingsInputEl.value;
-  expensesInputEl.max = ((parseInt(initialExpensesInputEl.value) || 0) * 2).toString();
-  expensesInputEl.value = initialExpensesInputEl.value;
+  const parsedSavingsInputValue = Number(initialSavingsInputEl.value.replace(/[^0-9]/g, ""));
+  const parsedExpensesInputValue = Number(initialExpensesInputEl.value.replace(/[^0-9]/g, ""));
+  savingsInputEl.max = (parsedSavingsInputValue * 2).toString();
+  savingsInputEl.value = parsedSavingsInputValue.toString();
+  expensesInputEl.max = (parsedExpensesInputValue * 2).toString();
+  expensesInputEl.value = initialExpensesInputEl.value.replace(/[^0-9]/g, "");
   const savingsAmountEl = document.getElementById("savings-amount");
   if (!savingsAmountEl)
     return;
-  savingsAmountEl.innerText = UsDollar.format(parseInt(initialSavingsInputEl.value));
+  savingsAmountEl.innerText = UsDollar.format(parsedSavingsInputValue);
   const oneMonthExpensesExpensesEl = document.getElementById("one-month-expenses");
   const sixMonthExpensesExpensesEl = document.getElementById("six-month-expenses");
   if (!oneMonthExpensesExpensesEl || !sixMonthExpensesExpensesEl)
     return;
-  oneMonthExpensesExpensesEl.innerHTML = UsDollar.format(parseInt(initialExpensesInputEl.value) || 0);
-  sixMonthExpensesExpensesEl.innerHTML = UsDollar.format((parseInt(initialExpensesInputEl.value) || 0) * 6);
+  oneMonthExpensesExpensesEl.innerHTML = UsDollar.format(parsedExpensesInputValue);
+  sixMonthExpensesExpensesEl.innerHTML = UsDollar.format(parsedExpensesInputValue * 6);
 }
 function listenToFormChanges() {
   const slidersEl = document.getElementById("sliders");
@@ -151,15 +203,17 @@ function listenForRowClicks() {
   if (!houseRatesEl || !expensesInputEl)
     return;
   const monthlyExpensesAmount = parseInt(expensesInputEl.value);
-  let expandedRowInfo = document.getElementById("expanded-row-info");
-  if (expandedRowInfo)
-    expandedRowInfo.remove();
-  expandedRowInfo = document.createElement("div");
-  expandedRowInfo.id = "expanded-row-info";
   houseRatesEl.addEventListener("click", (event) => {
     const clickedRow = event.target?.parentElement;
     if (!clickedRow || !clickedRow.dataset.fullPrice)
       return;
+    let expandedRowInfo = document.getElementById("expanded-row-info");
+    if (clickedRow === expandedRowInfo?.previousSibling) {
+      expandedRowInfo.remove();
+      return;
+    }
+    expandedRowInfo = document.createElement("div");
+    expandedRowInfo.id = "expanded-row-info";
     const rowTotalHousePrice = parseInt(clickedRow.dataset.fullPrice ?? "");
     const rowDownPaymentAmount = parseInt(clickedRow.dataset.downPaymentAmount ?? "");
     const principalAmount = rowTotalHousePrice - rowDownPaymentAmount;
@@ -170,8 +224,10 @@ function listenForRowClicks() {
       termYears: 30,
       annualRate: 8
     });
-    expandedRowInfo.innerHTML = `
-      30-Year Monthly Payment:<br>
+    const expandedRowDetails = document.createElement("div");
+    expandedRowDetails.id = "expanded-row-details";
+    expandedRowDetails.innerHTML = `
+     30-Year Monthly Payment:<br>
       ${UsDollar.format(monthlyPaymentAmount)}<br>
       Additional Monthly Expenses:<br>
       ${UsDollar.format(averageMonthlyPropertyTaxes + averageMonthlyHomeowners)}<br>
@@ -179,6 +235,8 @@ function listenForRowClicks() {
       ${UsDollar.format(monthlyExpensesAmount + monthlyPaymentAmount + averageMonthlyPropertyTaxes + averageMonthlyHomeowners)}
       </div>
     `;
+    expandedRowInfo.innerHTML = "";
+    expandedRowInfo.appendChild(expandedRowDetails);
     clickedRow.insertAdjacentElement("afterend", expandedRowInfo);
   });
 }
