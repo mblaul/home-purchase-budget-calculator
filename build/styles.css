@@ -105,8 +105,12 @@ button {
 }
 
 .input-currency-symbol {
+  height: 100%;
   position: absolute;
-  padding: 0.33em;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-left: 0.3em;
   font: 1.2em/1.5 "Arial";
 }
 
