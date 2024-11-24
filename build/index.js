@@ -37,6 +37,8 @@ function createTable({
   columnDefs
 }) {
   const tableEl = document.createElement("div");
+  tableEl.dataset.sortColumnName = "";
+  tableEl.dataset.sortDirection = "";
   tableEl.id = tableId;
   const headerRowEl = document.createElement("div");
   headerRowEl.classList.add("header", "row");
@@ -44,23 +46,69 @@ function createTable({
   for (const columnDef of columnDefs) {
     const headerCellEl = document.createElement("div");
     headerCellEl.classList.add("header", "cell");
-    headerCellEl.innerText = columnDef.label;
+    headerCellEl.innerHTML = `<div>${columnDef.label}</div>`;
+    headerCellEl.dataset.col = columnDef.dataPropertyName;
+    headerCellEl.dataset.tableId = tableId;
+    headerCellEl.addEventListener("click", sortTableData);
     headerRowEl.appendChild(headerCellEl);
   }
-  data.forEach((row) => {
+  const tableBodyEl = document.createElement("div");
+  tableBodyEl.id = "table-body";
+  tableEl?.appendChild(tableBodyEl);
+  data.forEach((row, index) => {
     const rowEl = document.createElement("div");
     rowEl.classList.add("body", "row");
-    tableEl?.appendChild(rowEl);
+    rowEl.dataset.rowId = index.toString();
+    tableBodyEl?.appendChild(rowEl);
     for (const column in row) {
       rowEl.dataset[column] = row[column];
       const cell = document.createElement("div");
       cell.classList.add("body", "cell");
       cell.dataset.col = column;
+      cell.dataset.tableId = tableId;
       cell.innerHTML = columnDefs.find((colDef) => colDef.dataPropertyName === column)?.formatter(row[column]) || "";
       rowEl.appendChild(cell);
     }
   });
   return tableEl;
+}
+function sortTableData(event) {
+  const targetElement = event.currentTarget;
+  const newSortColumnName = targetElement.dataset.col;
+  if (!newSortColumnName)
+    return;
+  const tableEl = document.getElementById(targetElement.dataset.tableId || "");
+  if (!tableEl)
+    return;
+  let newSortDirection = "";
+  if (tableEl.dataset.sortColumnName === newSortColumnName) {
+    if (tableEl.dataset.sortDirection === "asc") {
+      newSortDirection = "desc";
+    }
+    if (tableEl.dataset.sortDirection === "") {
+      newSortDirection = "asc";
+    }
+  } else {
+    newSortDirection = "asc";
+  }
+  tableEl.dataset.sortColumnName = newSortColumnName;
+  tableEl.dataset.sortDirection = newSortDirection;
+  const tableRowEls = Array.from(document.getElementsByClassName("body row"));
+  const sortedTableRowEls = tableRowEls.sort((a, b) => {
+    if (newSortDirection === "")
+      return Number(a.dataset.rowId ?? "") - Number(b.dataset.rowId ?? "");
+    const sortResult = Number(a.dataset[newSortColumnName] ?? "") - Number(b.dataset[newSortColumnName] ?? "");
+    return newSortDirection === "asc" ? sortResult : -sortResult;
+  });
+  const tableBodyEl = document.getElementById("table-body");
+  if (!tableBodyEl)
+    return;
+  tableBodyEl.replaceChildren(...sortedTableRowEls);
+  document.getElementById("sort-indicator")?.remove();
+  const sortIndicatorEl = document.createElement("div");
+  sortIndicatorEl.id = "sort-indicator";
+  sortIndicatorEl.innerHTML = newSortDirection === "asc" ? "\u2B06\uFE0F" : newSortDirection === "desc" ? "\u2B07\uFE0F" : "";
+  targetElement.appendChild(sortIndicatorEl);
 }
 var UsDollar = Intl.NumberFormat("en-US", {
   style: "currency",
@@ -97,7 +145,7 @@ function init() {
         },
         {
           dataPropertyName: "percentOfFullPrice",
-          label: "Percent",
+          label: "Percent Down",
           formatter: (cellValue) => Percent.format(parseFloat(cellValue))
         },
         {

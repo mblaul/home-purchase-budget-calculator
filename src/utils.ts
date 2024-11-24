@@ -77,6 +77,8 @@ export function createTable<T>({
   }[];
 }) {
   const tableEl = document.createElement("div");
+  tableEl.dataset.sortColumnName = "";
+  tableEl.dataset.sortDirection = "";
   tableEl.id = tableId;
 
   const headerRowEl = document.createElement("div");
@@ -88,16 +90,24 @@ export function createTable<T>({
     const headerCellEl = document.createElement("div");
 
     headerCellEl.classList.add("header", "cell");
-    headerCellEl.innerText = columnDef.label;
+    headerCellEl.innerHTML = `<div>${columnDef.label}</div>`;
+    headerCellEl.dataset.col = columnDef.dataPropertyName;
+    headerCellEl.dataset.tableId = tableId;
+    headerCellEl.addEventListener("click", sortTableData);
 
     headerRowEl.appendChild(headerCellEl);
   }
 
-  data.forEach((row) => {
+  const tableBodyEl = document.createElement("div");
+  tableBodyEl.id = "table-body";
+  tableEl?.appendChild(tableBodyEl);
+
+  data.forEach((row, index) => {
     const rowEl = document.createElement("div");
     rowEl.classList.add("body", "row");
+    rowEl.dataset.rowId = index.toString();
 
-    tableEl?.appendChild(rowEl);
+    tableBodyEl?.appendChild(rowEl);
 
     for (const column in row) {
       rowEl.dataset[column] = row[column] as string;
@@ -105,6 +115,7 @@ export function createTable<T>({
       const cell = document.createElement("div");
       cell.classList.add("body", "cell");
       cell.dataset.col = column;
+      cell.dataset.tableId = tableId;
 
       cell.innerHTML =
         columnDefs
@@ -116,4 +127,60 @@ export function createTable<T>({
   });
 
   return tableEl;
+}
+
+function sortTableData(event: Event) {
+  const targetElement = event.currentTarget as HTMLElement;
+  const newSortColumnName = targetElement.dataset.col;
+  if (!newSortColumnName) return;
+
+  const tableEl = document.getElementById(targetElement.dataset.tableId || "");
+  if (!tableEl) return;
+
+  let newSortDirection = "";
+
+  if (tableEl.dataset.sortColumnName === newSortColumnName) {
+    if (tableEl.dataset.sortDirection === "asc") {
+      newSortDirection = "desc";
+    }
+
+    if (tableEl.dataset.sortDirection === "") {
+      newSortDirection = "asc";
+    }
+  } else {
+    newSortDirection = "asc";
+  }
+
+  tableEl.dataset.sortColumnName = newSortColumnName;
+  tableEl.dataset.sortDirection = newSortDirection;
+
+  const tableRowEls = Array.from(
+    document.getElementsByClassName("body row")
+  ) as HTMLDivElement[];
+
+  const sortedTableRowEls = tableRowEls.sort((a, b) => {
+    if (newSortDirection === "")
+      return Number(a.dataset.rowId ?? "") - Number(b.dataset.rowId ?? "");
+
+    const sortResult =
+      Number(a.dataset[newSortColumnName] ?? "") -
+      Number(b.dataset[newSortColumnName] ?? "");
+
+    return newSortDirection === "asc" ? sortResult : -sortResult;
+  });
+
+  const tableBodyEl = document.getElementById("table-body");
+
+  if (!tableBodyEl) return;
+
+  tableBodyEl.replaceChildren(...sortedTableRowEls);
+
+  document.getElementById("sort-indicator")?.remove();
+
+  const sortIndicatorEl = document.createElement("div");
+  sortIndicatorEl.id = "sort-indicator";
+
+  sortIndicatorEl.innerHTML =
+    newSortDirection === "asc" ? "⬆️" : newSortDirection === "desc" ? "⬇️" : "";
+  targetElement.appendChild(sortIndicatorEl);
 }

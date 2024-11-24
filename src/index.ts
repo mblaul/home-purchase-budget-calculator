@@ -23,7 +23,7 @@ function init() {
         },
         {
           dataPropertyName: "percentOfFullPrice",
-          label: "Percent",
+          label: "Percent Down",
           formatter: (cellValue: string) =>
             Percent.format(parseFloat(cellValue)),
         },

@@ -224,10 +224,26 @@ button {
   &:last-child {
     border-bottom: none;
   }
+
+  &.header {
+    font: 0.75em/1.5 "Arial";
+  }
 }
 
 .cell {
+  display: flex;
   flex-basis: 33%;
+
+  &.header {
+    cursor: pointer;
+
+    div {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-width: 0;
+    }
+  }
 }
 
 /* Utility */
