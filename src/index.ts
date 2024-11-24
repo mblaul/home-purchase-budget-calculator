@@ -1,8 +1,5 @@
 import type { DownPaymentOption } from "./types";
-import { UsDollar, Percent, getCurrencyTextInput } from "./utils";
-
-const HOUSE_PRICES = [300_000, 350_000, 400_000, 450_000, 500_000];
-const DOWN_PAYMENT_PERCENTS = [0.1, 0.15, 0.2];
+import { UsDollar, getCurrencyTextInput, createTable, Percent } from "./utils";
 
 function init() {
   setupEnterAmountsPage();
@@ -12,8 +9,35 @@ function init() {
 
   seeRatesButtonEl.addEventListener("click", () => {
     setupRatesPageInputs();
-    listenToFormChanges();
-    createDownPaymentsTable(calculateDownPaymentOptions());
+    listenToRateInputChanges();
+
+    const tableEl = createTable<DownPaymentOption>({
+      tableId: "house-rates",
+      data: calculateDownPaymentOptions(),
+      columnDefs: [
+        {
+          dataPropertyName: "fullPrice",
+          label: "House Price",
+          formatter: (cellValue: string) =>
+            UsDollar.format(parseInt(cellValue)),
+        },
+        {
+          dataPropertyName: "percentOfFullPrice",
+          label: "Percent",
+          formatter: (cellValue: string) =>
+            Percent.format(parseFloat(cellValue)),
+        },
+        {
+          dataPropertyName: "downPaymentAmount",
+          label: "Down Payment",
+          formatter: (cellValue: string) =>
+            UsDollar.format(parseInt(cellValue)),
+        },
+      ],
+    });
+
+    document.getElementById("house-rates-container")?.appendChild(tableEl);
+    addRowClickListenerToTable();
     calculateBudget();
 
     const enterAmountsWrapperEl = document.getElementById(
@@ -25,8 +49,6 @@ function init() {
     playWithRatesEl.classList.remove("hidden");
     playWithRatesEl.classList.add("visible");
     enterAmountsWrapperEl.remove();
-
-    listenForRowClicks();
   });
 }
 
@@ -106,7 +128,7 @@ function setupRatesPageInputs() {
   );
 }
 
-function listenToFormChanges() {
+function listenToRateInputChanges() {
   const slidersEl = document.getElementById("sliders");
   if (!slidersEl) return;
 
@@ -166,8 +188,14 @@ function highlightRates(budget: number) {
 
   for (let i = 0; i < houseRatesRowEls.length; i++) {
     const element = houseRatesRowEls?.item(i) as HTMLElement;
-    if (parseInt(element.dataset.downPaymentAmount ?? "") < budget) {
-      element.style.backgroundColor = "#9adc9a";
+    const downPaymentAmount = parseInt(element.dataset.downPaymentAmount ?? "");
+
+    if (budget > downPaymentAmount) {
+      const opacity = (Math.min(budget / downPaymentAmount, 2) / 2).toFixed(1);
+      element.style.backgroundColor = `rgb(154, 220, 154, ${opacity})`;
+    } else if (downPaymentAmount > budget) {
+      const opacity = (Math.min(downPaymentAmount / budget, 2) / 2).toFixed(1);
+      element.style.backgroundColor = `rgb(220, 154, 154, ${opacity}`;
     } else {
       element.style.backgroundColor = "unset";
     }
@@ -175,6 +203,8 @@ function highlightRates(budget: number) {
 }
 
 function calculateDownPaymentOptions(): DownPaymentOption[] {
+  const HOUSE_PRICES = [300_000, 350_000, 400_000, 450_000, 500_000];
+  const DOWN_PAYMENT_PERCENTS = [0.1, 0.15, 0.2];
   let downPaymentOptions: DownPaymentOption[] = [];
 
   HOUSE_PRICES.forEach((fullPrice) => {
@@ -190,55 +220,7 @@ function calculateDownPaymentOptions(): DownPaymentOption[] {
   return downPaymentOptions;
 }
 
-function createDownPaymentsTable(downPaymentOptions: DownPaymentOption[]) {
-  const houseRatesEl = document.getElementById("house-rates");
-  const headerRowEl = document.createElement("div");
-
-  headerRowEl.classList.add("row");
-  houseRatesEl?.appendChild(headerRowEl);
-
-  const downPaymentColumns = ["Total Price", "Percent Down", "Down Payment"];
-
-  for (const column of downPaymentColumns) {
-    const headerCellEl = document.createElement("div");
-
-    headerCellEl.classList.add("cell");
-    headerCellEl.innerText = column;
-
-    headerRowEl.appendChild(headerCellEl);
-  }
-
-  downPaymentOptions.forEach((downPaymentOption) => {
-    const downPaymentRowEl = document.createElement("div");
-
-    downPaymentRowEl.classList.add("row");
-
-    downPaymentRowEl.dataset.fullPrice = downPaymentOption.fullPrice.toString();
-    downPaymentRowEl.dataset.percentOfFullPrice =
-      downPaymentOption.percentOfFullPrice.toString();
-    downPaymentRowEl.dataset.downPaymentAmount =
-      downPaymentOption.downPaymentAmount.toString();
-
-    houseRatesEl?.appendChild(downPaymentRowEl);
-
-    Object.keys(downPaymentOption).forEach((key) => {
-      const downPaymentCellEl = document.createElement("div");
-
-      downPaymentCellEl.classList.add("cell");
-      downPaymentCellEl.dataset.col = key;
-
-      const rawValue = downPaymentRowEl.dataset[key] || "";
-      downPaymentCellEl.innerHTML =
-        key === "percentOfFullPrice"
-          ? Percent.format(parseFloat(rawValue))
-          : UsDollar.format(parseInt(rawValue));
-
-      downPaymentRowEl.appendChild(downPaymentCellEl);
-    });
-  });
-}
-
-function listenForRowClicks() {
+function addRowClickListenerToTable() {
   const houseRatesEl = document.getElementById("house-rates");
   const expensesInputEl = document.getElementById(
     "expenses-input"
@@ -258,6 +240,7 @@ function listenForRowClicks() {
       return;
     }
 
+    expandedRowInfo?.remove();
     expandedRowInfo = document.createElement("div");
     expandedRowInfo.id = "expanded-row-info";
 

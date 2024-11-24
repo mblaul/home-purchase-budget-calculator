@@ -31,6 +31,37 @@ function getCurrencyTextInput({
   inputElement.addEventListener("input", handleNumberInput);
   return containerElement;
 }
+function createTable({
+  tableId,
+  data,
+  columnDefs
+}) {
+  const tableEl = document.createElement("div");
+  tableEl.id = tableId;
+  const headerRowEl = document.createElement("div");
+  headerRowEl.classList.add("header", "row");
+  tableEl?.appendChild(headerRowEl);
+  for (const columnDef of columnDefs) {
+    const headerCellEl = document.createElement("div");
+    headerCellEl.classList.add("header", "cell");
+    headerCellEl.innerText = columnDef.label;
+    headerRowEl.appendChild(headerCellEl);
+  }
+  data.forEach((row) => {
+    const rowEl = document.createElement("div");
+    rowEl.classList.add("body", "row");
+    tableEl?.appendChild(rowEl);
+    for (const column in row) {
+      rowEl.dataset[column] = row[column];
+      const cell = document.createElement("div");
+      cell.classList.add("body", "cell");
+      cell.dataset.col = column;
+      cell.innerHTML = columnDefs.find((colDef) => colDef.dataPropertyName === column)?.formatter(row[column]) || "";
+      rowEl.appendChild(cell);
+    }
+  });
+  return tableEl;
+}
 var UsDollar = Intl.NumberFormat("en-US", {
   style: "currency",
   currency: "USD",
@@ -54,8 +85,30 @@ function init() {
     return;
   seeRatesButtonEl.addEventListener("click", () => {
     setupRatesPageInputs();
-    listenToFormChanges();
-    createDownPaymentsTable(calculateDownPaymentOptions());
+    listenToRateInputChanges();
+    const tableEl = createTable({
+      tableId: "house-rates",
+      data: calculateDownPaymentOptions(),
+      columnDefs: [
+        {
+          dataPropertyName: "fullPrice",
+          label: "House Price",
+          formatter: (cellValue) => UsDollar.format(parseInt(cellValue))
+        },
+        {
+          dataPropertyName: "percentOfFullPrice",
+          label: "Percent",
+          formatter: (cellValue) => Percent.format(parseFloat(cellValue))
+        },
+        {
+          dataPropertyName: "downPaymentAmount",
+          label: "Down Payment",
+          formatter: (cellValue) => UsDollar.format(parseInt(cellValue))
+        }
+      ]
+    });
+    document.getElementById("house-rates-container")?.appendChild(tableEl);
+    addRowClickListenerToTable();
     calculateBudget();
     const enterAmountsWrapperEl = document.getElementById("enter-amounts-wrapper");
     const playWithRatesEl = document.getElementById("play-with-rates");
@@ -64,7 +117,6 @@ function init() {
     playWithRatesEl.classList.remove("hidden");
     playWithRatesEl.classList.add("visible");
     enterAmountsWrapperEl.remove();
-    listenForRowClicks();
   });
 }
 function setupEnterAmountsPage() {
@@ -103,7 +155,7 @@ function setupRatesPageInputs() {
   oneMonthExpensesExpensesEl.innerHTML = UsDollar.format(parsedExpensesInputValue);
   sixMonthExpensesExpensesEl.innerHTML = UsDollar.format(parsedExpensesInputValue * 6);
 }
-function listenToFormChanges() {
+function listenToRateInputChanges() {
   const slidersEl = document.getElementById("sliders");
   if (!slidersEl)
     return;
@@ -148,14 +200,21 @@ function highlightRates(budget) {
     return;
   for (let i = 0;i < houseRatesRowEls.length; i++) {
     const element = houseRatesRowEls?.item(i);
-    if (parseInt(element.dataset.downPaymentAmount ?? "") < budget) {
-      element.style.backgroundColor = "#9adc9a";
+    const downPaymentAmount = parseInt(element.dataset.downPaymentAmount ?? "");
+    if (budget > downPaymentAmount) {
+      const opacity = (Math.min(budget / downPaymentAmount, 2) / 2).toFixed(1);
+      element.style.backgroundColor = `rgb(154, 220, 154, ${opacity})`;
+    } else if (downPaymentAmount > budget) {
+      const opacity = (Math.min(downPaymentAmount / budget, 2) / 2).toFixed(1);
+      element.style.backgroundColor = `rgb(220, 154, 154, ${opacity}`;
     } else {
       element.style.backgroundColor = "unset";
     }
   }
 }
 function calculateDownPaymentOptions() {
+  const HOUSE_PRICES = [300000, 350000, 400000, 450000, 500000];
+  const DOWN_PAYMENT_PERCENTS = [0.1, 0.15, 0.2];
   let downPaymentOptions = [];
   HOUSE_PRICES.forEach((fullPrice) => {
     DOWN_PAYMENT_PERCENTS.forEach((percentOfFullPrice) => {
@@ -168,36 +227,7 @@ function calculateDownPaymentOptions() {
   });
   return downPaymentOptions;
 }
-function createDownPaymentsTable(downPaymentOptions) {
-  const houseRatesEl = document.getElementById("house-rates");
-  const headerRowEl = document.createElement("div");
-  headerRowEl.classList.add("row");
-  houseRatesEl?.appendChild(headerRowEl);
-  const downPaymentColumns = ["Total Price", "Percent Down", "Down Payment"];
-  for (const column of downPaymentColumns) {
-    const headerCellEl = document.createElement("div");
-    headerCellEl.classList.add("cell");
-    headerCellEl.innerText = column;
-    headerRowEl.appendChild(headerCellEl);
-  }
-  downPaymentOptions.forEach((downPaymentOption) => {
-    const downPaymentRowEl = document.createElement("div");
-    downPaymentRowEl.classList.add("row");
-    downPaymentRowEl.dataset.fullPrice = downPaymentOption.fullPrice.toString();
-    downPaymentRowEl.dataset.percentOfFullPrice = downPaymentOption.percentOfFullPrice.toString();
-    downPaymentRowEl.dataset.downPaymentAmount = downPaymentOption.downPaymentAmount.toString();
-    houseRatesEl?.appendChild(downPaymentRowEl);
-    Object.keys(downPaymentOption).forEach((key) => {
-      const downPaymentCellEl = document.createElement("div");
-      downPaymentCellEl.classList.add("cell");
-      downPaymentCellEl.dataset.col = key;
-      const rawValue = downPaymentRowEl.dataset[key] || "";
-      downPaymentCellEl.innerHTML = key === "percentOfFullPrice" ? Percent.format(parseFloat(rawValue)) : UsDollar.format(parseInt(rawValue));
-      downPaymentRowEl.appendChild(downPaymentCellEl);
-    });
-  });
-}
-function listenForRowClicks() {
+function addRowClickListenerToTable() {
   const houseRatesEl = document.getElementById("house-rates");
   const expensesInputEl = document.getElementById("expenses-input");
   if (!houseRatesEl || !expensesInputEl)
@@ -212,6 +242,7 @@ function listenForRowClicks() {
       expandedRowInfo.remove();
       return;
     }
+    expandedRowInfo?.remove();
     expandedRowInfo = document.createElement("div");
     expandedRowInfo.id = "expanded-row-info";
     const rowTotalHousePrice = parseInt(clickedRow.dataset.fullPrice ?? "");
@@ -253,6 +284,4 @@ function calculateMonthlyMortgagePayment({
   const monthlyPayment = principal * (monthlyRate * Math.pow(1 + monthlyRate, numberOfPayments)) / (Math.pow(1 + monthlyRate, numberOfPayments) - 1);
   return Number(monthlyPayment.toFixed(2));
 }
-var HOUSE_PRICES = [300000, 350000, 400000, 450000, 500000];
-var DOWN_PAYMENT_PERCENTS = [0.1, 0.15, 0.2];
 window.onload = init;

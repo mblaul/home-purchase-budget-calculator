@@ -1,3 +1,4 @@
+// Formatting
 export const UsDollar = Intl.NumberFormat("en-US", {
   style: "currency",
   currency: "USD",
@@ -15,6 +16,7 @@ export const Decimal = Intl.NumberFormat("en-US", {
   maximumFractionDigits: 0,
 });
 
+// Inputs
 function handleNumberInput(event: Event) {
   const inputElement = event.currentTarget as HTMLInputElement;
 
@@ -58,4 +60,60 @@ export function getCurrencyTextInput({
   inputElement.addEventListener("input", handleNumberInput);
 
   return containerElement;
+}
+
+// Table
+export function createTable<T>({
+  tableId,
+  data,
+  columnDefs,
+}: {
+  tableId: string;
+  data: T[];
+  columnDefs: {
+    label: string;
+    dataPropertyName: string;
+    formatter: (cellValue: string) => string;
+  }[];
+}) {
+  const tableEl = document.createElement("div");
+  tableEl.id = tableId;
+
+  const headerRowEl = document.createElement("div");
+
+  headerRowEl.classList.add("header", "row");
+  tableEl?.appendChild(headerRowEl);
+
+  for (const columnDef of columnDefs) {
+    const headerCellEl = document.createElement("div");
+
+    headerCellEl.classList.add("header", "cell");
+    headerCellEl.innerText = columnDef.label;
+
+    headerRowEl.appendChild(headerCellEl);
+  }
+
+  data.forEach((row) => {
+    const rowEl = document.createElement("div");
+    rowEl.classList.add("body", "row");
+
+    tableEl?.appendChild(rowEl);
+
+    for (const column in row) {
+      rowEl.dataset[column] = row[column] as string;
+
+      const cell = document.createElement("div");
+      cell.classList.add("body", "cell");
+      cell.dataset.col = column;
+
+      cell.innerHTML =
+        columnDefs
+          .find((colDef) => colDef.dataPropertyName === column)
+          ?.formatter(row[column] as string) || "";
+
+      rowEl.appendChild(cell);
+    }
+  });
+
+  return tableEl;
 }
