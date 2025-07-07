@@ -129,7 +129,7 @@ button {
   font: 1.2em/1.5 "Arial";
 }
 
-#play-with-rates {
+#calculator {
   overflow: auto;
   background-color: rgb(255, 248, 222);
   padding: 0.5em;

@@ -33,6 +33,16 @@ function handleNumberInput(event: Event) {
   inputElement.value = Integer.format(parseInt(inputElement.value));
 }
 
+function handleDecimalNumberInput(event: Event) {
+  const inputElement = event.currentTarget as HTMLInputElement;
+
+  inputElement.value = inputElement.value.replace(/[^0-9]/g, "");
+
+  if (inputElement.value === "") return;
+
+  inputElement.value = Decimal.format(parseInt(inputElement.value) / 100);
+}
+
 function handlePercentInput(event: Event) {
   const inputElement = event.currentTarget as HTMLInputElement;
 
@@ -49,6 +59,58 @@ function handlePercentInput(event: Event) {
   } else {
     inputElement.value = Decimal.format(intValue / 100);
   }
+}
+
+export function getDecimalNumberInput({
+  id,
+  label
+}: {
+  id: string;
+  label: string;
+}) {
+  const containerElement = document.createElement("div");
+  containerElement.classList.add("input-field-container");
+
+  const labelElement = document.createElement("label");
+  labelElement.htmlFor = id;
+  labelElement.innerText = label;
+  containerElement.insertBefore(labelElement, containerElement.firstChild);
+
+  const inputWrapperElement = document.createElement("div");
+  inputWrapperElement.classList.add("input-wrapper");
+  containerElement.appendChild(inputWrapperElement);
+
+  const inputElement = document.createElement("input");
+  inputElement.id = id;
+  inputElement.type = "text";
+  inputElement.inputMode = "numeric";
+  inputWrapperElement.appendChild(inputElement);
+
+  inputElement.addEventListener("input", handleDecimalNumberInput);
+
+  return containerElement;
+}
+
+export function setupHomeCosts() {
+  const homeCostsEl = document.getElementById("home-costs");
+  if (!homeCostsEl) return;
+
+  const costContainerElement = document.createElement("div");
+  costContainerElement.classList.add("cost-value-container");
+  
+  homeCostsEl.appendChild(costContainerElement);
+
+  const mortgageCostLabelElement = document.createElement("div");
+  mortgageCostLabelElement.id = "label-mortgage-cost";
+  mortgageCostLabelElement.classList.add("label-cost-value");
+  mortgageCostLabelElement.innerText = "Mortgage Cost";
+
+  const mortgageCostElement = document.createElement("div");
+  mortgageCostElement.id = "mortgage-cost";
+  mortgageCostElement.classList.add("cost-value");
+
+  homeCostsEl.appendChild(mortgageCostLabelElement);
+  homeCostsEl.appendChild(mortgageCostElement);
 }
 
 export function getCurrencyTextInput({
