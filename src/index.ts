@@ -1,4 +1,11 @@
-import { UsDollar, getCurrencyTextInput, Percent, getSelectInput, getPercentTextInput, getDecimalNumberInput, setupHomeCosts } from "./utils";
+import { INPUTS } from "./inputs";
+import { UsDollar, getCurrencyTextInput, getPercentTextInput, getDecimalNumberInput, setupHomeCosts } from "./utils";
+
+type Input<T> = {
+  id: string;
+  label: string;
+  formatter: (value: T) => string;
+}
 
 function init() {
   setupSavingsInputs();
@@ -22,18 +29,11 @@ function setupSavingsInputs() {
   savingsHeaderElement.innerText = "Monthly Finance Landscape";
   savingsContainerElement.appendChild(savingsHeaderElement);
 
-  const savingsInputElement = getCurrencyTextInput({
-    id: "initial-savings-input",
-    label: "Savings",
-  });
+  const savingsInputElement = getCurrencyTextInput(INPUTS.SAVINGS);
+  const monthlyExpensesElement = getCurrencyTextInput(INPUTS.MONTHLY_EXPENSES);
 
-  const initialExpensesElement =  getCurrencyTextInput({
-    id: "monthly-expenses-input",
-    label: "Monthly Expenses",
-  });
-
-  savingsContainerElement.appendChild(initialExpensesElement);
   savingsContainerElement.appendChild(savingsInputElement);
+  savingsContainerElement.appendChild(monthlyExpensesElement);
 }
 
 function setupHouseSaleInputs() {
@@ -50,20 +50,9 @@ function setupHouseSaleInputs() {
   houseExpensesHeaderElement.innerText = "Home Purchase Expenses";
   houseSalesContainerElement.appendChild(houseExpensesHeaderElement);
 
-  const principalElement = getCurrencyTextInput({
-    id: "principal-input",
-    label: "House Sale Price",
-  });
-  
-  const downPaymentAmountElement = getCurrencyTextInput({
-    id: "down-payment-input",
-    label: "Down Payment Amount",
-  });
-
-  const mortgageRateElement = getPercentTextInput({
-    id: "mortgage-rate-input",
-    label: "30-Year Fixed Mortgage Rate",
-  });
+  const principalElement = getCurrencyTextInput(INPUTS.PRINCIPAL);
+  const downPaymentAmountElement = getCurrencyTextInput(INPUTS.DOWN_PAYMENT_AMOUNT);
+  const mortgageRateElement = getPercentTextInput(INPUTS.MORTGAGE_RATE);
 
   houseSalesContainerElement.appendChild(principalElement);
   houseSalesContainerElement.appendChild(downPaymentAmountElement);
@@ -84,15 +73,9 @@ function setupMonthlyHomeExpensesInputs() {
   monthlyHomeExpensesHeaderElement.innerText = "Monthly Home Expenses";
   monthlyHomeExpensesContainerElement.appendChild(monthlyHomeExpensesHeaderElement);
 
-  const pmiElement = getCurrencyTextInput({
-    id: "pmi-input",
-    label: "PMI (Private Mortgage Insurance)",
-  });
+  const pmiElement = getCurrencyTextInput(INPUTS.MONTHLY_PMI);
   
-  const homeownersInsuranceElement = getCurrencyTextInput({
-    id: "homeowners-insurance-input",
-    label: "Homeowners' Insurance",
-  });
+  const homeownersInsuranceElement = getCurrencyTextInput(INPUTS.HOMEOWNERS_INSURANCE);
 
   monthlyHomeExpensesContainerElement.appendChild(pmiElement);
   monthlyHomeExpensesContainerElement.appendChild(homeownersInsuranceElement);
@@ -100,10 +83,7 @@ function setupMonthlyHomeExpensesInputs() {
 }
 
 function setupTaxRateInput() {
-  const taxRateElement = getDecimalNumberInput({
-    id: "tax-rate-input",
-    label: "Tax Rate (in Mils)",
-  });
+  const taxRateElement = getDecimalNumberInput(INPUTS.TAX_RATE);
 
   return taxRateElement;
 }

@@ -23,44 +23,38 @@ function handleNumberInput(event) {
   inputElement.value = inputElement.value.replace(/[^0-9]/g, "");
   if (inputElement.value === "")
     return;
-  inputElement.value = Integer.format(parseInt(inputElement.value));
+  const inputType = inputElement.dataset.type;
+  inputElement.value = INPUT_TYPES_TO_STRING_FORMATTERS[inputType](parseInt(inputElement.value));
 }
 function handleDecimalNumberInput(event) {
   const inputElement = event.currentTarget;
   inputElement.value = inputElement.value.replace(/[^0-9]/g, "");
   if (inputElement.value === "")
     return;
-  inputElement.value = Decimal.format(parseInt(inputElement.value) / 100);
+  const inputType = inputElement.dataset.type;
+  inputElement.value = INPUT_TYPES_TO_STRING_FORMATTERS[inputType](parseInt(inputElement.value));
 }
 function handlePercentInput(event) {
   const inputElement = event.currentTarget;
   inputElement.value = inputElement.value.replace(/[^0-9]/g, "");
   if (inputElement.value === "")
     return;
-  let intValue = parseInt(inputElement.value);
-  if (intValue < 0) {
-    inputElement.value = Decimal.format(0 / 100);
-  } else if (intValue > 1e4) {
-    inputElement.value = Decimal.format(1e4 / 100);
-  } else {
-    inputElement.value = Decimal.format(intValue / 100);
-  }
+  const inputType = inputElement.dataset.type;
+  inputElement.value = INPUT_TYPES_TO_STRING_FORMATTERS[inputType](parseInt(inputElement.value));
 }
-function getDecimalNumberInput({
-  id,
-  label
-}) {
+function getDecimalNumberInput(input) {
   const containerElement = document.createElement("div");
   containerElement.classList.add("input-field-container");
   const labelElement = document.createElement("label");
-  labelElement.htmlFor = id;
-  labelElement.innerText = label;
+  labelElement.htmlFor = input.id;
+  labelElement.innerText = input.label;
   containerElement.insertBefore(labelElement, containerElement.firstChild);
   const inputWrapperElement = document.createElement("div");
   inputWrapperElement.classList.add("input-wrapper");
   containerElement.appendChild(inputWrapperElement);
   const inputElement = document.createElement("input");
-  inputElement.id = id;
+  inputElement.id = input.id;
+  inputElement.dataset.type = input.type;
   inputElement.type = "text";
   inputElement.inputMode = "numeric";
   inputWrapperElement.appendChild(inputElement);
@@ -84,15 +78,12 @@ function setupHomeCosts() {
   homeCostsEl.appendChild(mortgageCostLabelElement);
   homeCostsEl.appendChild(mortgageCostElement);
 }
-function getCurrencyTextInput({
-  id,
-  label
-}) {
+function getCurrencyTextInput(input) {
   const containerElement = document.createElement("div");
   containerElement.classList.add("input-field-container");
   const labelElement = document.createElement("label");
-  labelElement.htmlFor = id;
-  labelElement.innerText = label;
+  labelElement.htmlFor = input.id;
+  labelElement.innerText = input.label;
   containerElement.insertBefore(labelElement, containerElement.firstChild);
   const inputWrapperElement = document.createElement("div");
   inputWrapperElement.classList.add("input-wrapper");
@@ -102,22 +93,20 @@ function getCurrencyTextInput({
   currencySymbolElement.innerText = "$";
   inputWrapperElement.appendChild(currencySymbolElement);
   const inputElement = document.createElement("input");
-  inputElement.id = id;
+  inputElement.id = input.id;
+  inputElement.dataset.type = input.type;
   inputElement.type = "text";
   inputElement.inputMode = "numeric";
   inputWrapperElement.appendChild(inputElement);
   inputElement.addEventListener("input", handleNumberInput);
   return containerElement;
 }
-function getPercentTextInput({
-  id,
-  label
-}) {
+function getPercentTextInput(input) {
   const containerElement = document.createElement("div");
   containerElement.classList.add("input-field-container");
   const labelElement = document.createElement("label");
-  labelElement.htmlFor = id;
-  labelElement.innerText = label;
+  labelElement.htmlFor = input.id;
+  labelElement.innerText = input.label;
   containerElement.insertBefore(labelElement, containerElement.firstChild);
   const inputWrapperElement = document.createElement("div");
   inputWrapperElement.classList.add("input-wrapper");
@@ -127,13 +116,98 @@ function getPercentTextInput({
   percentSymbolElement.innerText = "%";
   inputWrapperElement.appendChild(percentSymbolElement);
   const inputElement = document.createElement("input");
-  inputElement.id = id;
+  inputElement.id = input.id;
+  inputElement.dataset.type = input.type;
   inputElement.type = "text";
   inputElement.inputMode = "numeric";
   inputWrapperElement.appendChild(inputElement);
   inputElement.addEventListener("input", handlePercentInput);
   return containerElement;
 }
+
+// src/inputs.ts
+var INPUT_TYPES = {
+  WHOLE_NUMBER: "wholeNumber",
+  DECIMAL: "decimal",
+  PERCENT: "percent",
+  CURRENCY: "currency"
+};
+var SAVINGS = {
+  id: "savings",
+  label: "Savings",
+  type: INPUT_TYPES.CURRENCY
+};
+var MONTHLY_EXPENSES = {
+  id: "monthly-expenses",
+  label: "Monthly Expenses",
+  type: INPUT_TYPES.CURRENCY
+};
+var PRINCIPAL = {
+  id: "principal",
+  label: "Principal",
+  type: INPUT_TYPES.CURRENCY
+};
+var DOWN_PAYMENT_AMOUNT = {
+  id: "down-payment-amount",
+  label: "Down Payment Amount",
+  type: INPUT_TYPES.CURRENCY
+};
+var MORTGAGE_RATE = {
+  id: "mortgage-rate",
+  label: "Mortgage Rate",
+  type: INPUT_TYPES.PERCENT
+};
+var MONTHLY_PMI = {
+  id: "pmi",
+  label: "PMI (Private Mortgage Insurance)",
+  type: INPUT_TYPES.CURRENCY
+};
+var HOMEOWNERS_INSURANCE = {
+  id: "homeowners-insurance",
+  label: "Homeowners' Insurance",
+  type: INPUT_TYPES.CURRENCY
+};
+var TAX_RATE = {
+  id: "tax-rate",
+  label: "Tax Rate (in Mils)",
+  type: INPUT_TYPES.DECIMAL
+};
+var INPUTS = {
+  SAVINGS,
+  MONTHLY_EXPENSES,
+  PRINCIPAL,
+  DOWN_PAYMENT_AMOUNT,
+  MORTGAGE_RATE,
+  MONTHLY_PMI,
+  HOMEOWNERS_INSURANCE,
+  TAX_RATE
+};
+var INPUT_IDS_TO_INPUTS = {
+  [SAVINGS.id]: SAVINGS,
+  [MONTHLY_EXPENSES.id]: MONTHLY_EXPENSES,
+  [PRINCIPAL.id]: PRINCIPAL,
+  [DOWN_PAYMENT_AMOUNT.id]: DOWN_PAYMENT_AMOUNT,
+  [MORTGAGE_RATE.id]: MORTGAGE_RATE,
+  [MONTHLY_PMI.id]: MONTHLY_PMI,
+  [HOMEOWNERS_INSURANCE.id]: HOMEOWNERS_INSURANCE,
+  [TAX_RATE.id]: TAX_RATE
+};
+var INPUT_TYPES_TO_STRING_FORMATTERS = {
+  [INPUT_TYPES.WHOLE_NUMBER]: (value) => Integer.format(value),
+  [INPUT_TYPES.DECIMAL]: (value) => Decimal.format(value / 100),
+  [INPUT_TYPES.PERCENT]: (value) => {
+    let result;
+    if (value < 0) {
+      result = Decimal.format(0);
+    } else if (value > 1e4) {
+      result = Decimal.format(100);
+    } else {
+      result = Decimal.format(value / 100);
+    }
+    return result;
+  },
+  [INPUT_TYPES.CURRENCY]: (value) => Decimal.format(value / 100)
+};
 
 // src/index.ts
 function init() {
@@ -153,16 +227,10 @@ function setupSavingsInputs() {
   savingsHeaderElement.id = "header-label-savings";
   savingsHeaderElement.innerText = "Monthly Finance Landscape";
   savingsContainerElement.appendChild(savingsHeaderElement);
-  const savingsInputElement = getCurrencyTextInput({
-    id: "initial-savings-input",
-    label: "Savings"
-  });
-  const initialExpensesElement = getCurrencyTextInput({
-    id: "monthly-expenses-input",
-    label: "Monthly Expenses"
-  });
-  savingsContainerElement.appendChild(initialExpensesElement);
+  const savingsInputElement = getCurrencyTextInput(INPUTS.SAVINGS);
+  const monthlyExpensesElement = getCurrencyTextInput(INPUTS.MONTHLY_EXPENSES);
   savingsContainerElement.appendChild(savingsInputElement);
+  savingsContainerElement.appendChild(monthlyExpensesElement);
 }
 function setupHouseSaleInputs() {
   const enterAmountsEl = document.getElementById("inputs");
@@ -175,18 +243,9 @@ function setupHouseSaleInputs() {
   houseExpensesHeaderElement.id = "header-label-house-expenses";
   houseExpensesHeaderElement.innerText = "Home Purchase Expenses";
   houseSalesContainerElement.appendChild(houseExpensesHeaderElement);
-  const principalElement = getCurrencyTextInput({
-    id: "principal-input",
-    label: "House Sale Price"
-  });
-  const downPaymentAmountElement = getCurrencyTextInput({
-    id: "down-payment-input",
-    label: "Down Payment Amount"
-  });
-  const mortgageRateElement = getPercentTextInput({
-    id: "mortgage-rate-input",
-    label: "30-Year Fixed Mortgage Rate"
-  });
+  const principalElement = getCurrencyTextInput(INPUTS.PRINCIPAL);
+  const downPaymentAmountElement = getCurrencyTextInput(INPUTS.DOWN_PAYMENT_AMOUNT);
+  const mortgageRateElement = getPercentTextInput(INPUTS.MORTGAGE_RATE);
   houseSalesContainerElement.appendChild(principalElement);
   houseSalesContainerElement.appendChild(downPaymentAmountElement);
   houseSalesContainerElement.appendChild(mortgageRateElement);
@@ -202,23 +261,17 @@ function setupMonthlyHomeExpensesInputs() {
   monthlyHomeExpensesHeaderElement.id = "header-label-house-expenses";
   monthlyHomeExpensesHeaderElement.innerText = "Monthly Home Expenses";
   monthlyHomeExpensesContainerElement.appendChild(monthlyHomeExpensesHeaderElement);
-  const pmiElement = getCurrencyTextInput({
-    id: "pmi-input",
-    label: "PMI (Private Mortgage Insurance)"
-  });
-  const homeownersInsuranceElement = getCurrencyTextInput({
-    id: "homeowners-insurance-input",
-    label: "Homeowners' Insurance"
-  });
+  const pmiElement = getCurrencyTextInput(INPUTS.MONTHLY_PMI);
+  const homeownersInsuranceElement = getCurrencyTextInput(INPUTS.HOMEOWNERS_INSURANCE);
   monthlyHomeExpensesContainerElement.appendChild(pmiElement);
   monthlyHomeExpensesContainerElement.appendChild(homeownersInsuranceElement);
   monthlyHomeExpensesContainerElement.appendChild(setupTaxRateInput());
 }
 function setupTaxRateInput() {
-  const taxRateElement = getDecimalNumberInput({
-    id: "tax-rate-input",
-    label: "Tax Rate (in Mils)"
-  });
+  const taxRateElement = getDecimalNumberInput(INPUTS.TAX_RATE);
   return taxRateElement;
 }
 window.onload = init;
+
+//# debugId=1F87FF9CBE0FF96364756E2164756E21
+//# sourceMappingURL=index.js.map

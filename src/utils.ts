@@ -1,3 +1,5 @@
+import { INPUT_TYPES_TO_STRING_FORMATTERS, type Input, type InputType } from "./inputs";
+
 // Formatting
 export const UsDollar = Intl.NumberFormat("en-US", {
   style: "currency",
@@ -30,7 +32,8 @@ function handleNumberInput(event: Event) {
 
   if (inputElement.value === "") return;
 
-  inputElement.value = Integer.format(parseInt(inputElement.value));
+  const inputType = inputElement.dataset.type as InputType;
+  inputElement.value = INPUT_TYPES_TO_STRING_FORMATTERS[inputType](parseInt(inputElement.value));
 }
 
 function handleDecimalNumberInput(event: Event) {
@@ -40,7 +43,8 @@ function handleDecimalNumberInput(event: Event) {
 
   if (inputElement.value === "") return;
 
-  inputElement.value = Decimal.format(parseInt(inputElement.value) / 100);
+  const inputType = inputElement.dataset.type as InputType;
+  inputElement.value = INPUT_TYPES_TO_STRING_FORMATTERS[inputType](parseInt(inputElement.value));
 }
 
 function handlePercentInput(event: Event) {
@@ -50,30 +54,17 @@ function handlePercentInput(event: Event) {
 
   if (inputElement.value === "") return;
 
-  let intValue = parseInt(inputElement.value);
-
-  if (intValue < 0) {
-    inputElement.value = Decimal.format(0 / 100);
-  } else  if (intValue > 10_000) {
-    inputElement.value = Decimal.format(10_000 / 100)
-  } else {
-    inputElement.value = Decimal.format(intValue / 100);
-  }
+  const inputType = inputElement.dataset.type as InputType;
+  inputElement.value = INPUT_TYPES_TO_STRING_FORMATTERS[inputType](parseInt(inputElement.value));
 }
 
-export function getDecimalNumberInput({
-  id,
-  label
-}: {
-  id: string;
-  label: string;
-}) {
+export function getDecimalNumberInput(input: Input) {
   const containerElement = document.createElement("div");
   containerElement.classList.add("input-field-container");
 
   const labelElement = document.createElement("label");
-  labelElement.htmlFor = id;
-  labelElement.innerText = label;
+  labelElement.htmlFor = input.id;
+  labelElement.innerText = input.label;
   containerElement.insertBefore(labelElement, containerElement.firstChild);
 
   const inputWrapperElement = document.createElement("div");
@@ -81,7 +72,8 @@ export function getDecimalNumberInput({
   containerElement.appendChild(inputWrapperElement);
 
   const inputElement = document.createElement("input");
-  inputElement.id = id;
+  inputElement.id = input.id;
+  inputElement.dataset.type = input.type;
   inputElement.type = "text";
   inputElement.inputMode = "numeric";
   inputWrapperElement.appendChild(inputElement);
@@ -113,19 +105,13 @@ export function setupHomeCosts() {
   homeCostsEl.appendChild(mortgageCostElement);
 }
 
-export function getCurrencyTextInput({
-  id,
-  label,
-}: {
-  id: string;
-  label: string;
-}) {
+export function getCurrencyTextInput(input: Input) {
   const containerElement = document.createElement("div");
   containerElement.classList.add("input-field-container");
 
   const labelElement = document.createElement("label");
-  labelElement.htmlFor = id;
-  labelElement.innerText = label;
+  labelElement.htmlFor = input.id;
+  labelElement.innerText = input.label;
   containerElement.insertBefore(labelElement, containerElement.firstChild);
 
   const inputWrapperElement = document.createElement("div");
@@ -138,7 +124,8 @@ export function getCurrencyTextInput({
   inputWrapperElement.appendChild(currencySymbolElement);
 
   const inputElement = document.createElement("input");
-  inputElement.id = id;
+  inputElement.id = input.id;
+  inputElement.dataset.type = input.type;
   inputElement.type = "text";
   inputElement.inputMode = "numeric";
   inputWrapperElement.appendChild(inputElement);
@@ -148,19 +135,13 @@ export function getCurrencyTextInput({
   return containerElement;
 }
 
-export function getPercentTextInput({
-  id,
-  label,
-}: {
-  id: string;
-  label: string;
-}) {
+export function getPercentTextInput(input: Input) {
   const containerElement = document.createElement("div");
   containerElement.classList.add("input-field-container");
 
   const labelElement = document.createElement("label");
-  labelElement.htmlFor = id;
-  labelElement.innerText = label;
+  labelElement.htmlFor = input.id;
+  labelElement.innerText = input.label;
   containerElement.insertBefore(labelElement, containerElement.firstChild);
 
   const inputWrapperElement = document.createElement("div");
@@ -173,7 +154,8 @@ export function getPercentTextInput({
   inputWrapperElement.appendChild(percentSymbolElement);
 
   const inputElement = document.createElement("input");
-  inputElement.id = id;
+  inputElement.id = input.id;
+  inputElement.dataset.type = input.type;
   inputElement.type = "text";
   inputElement.inputMode = "numeric";
   inputWrapperElement.appendChild(inputElement);

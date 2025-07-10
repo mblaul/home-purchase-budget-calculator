@@ -142,8 +142,6 @@ button {
 
   @media (width >= 1250px) {
     width: 80%;
-    flex-wrap: nowrap;
-    overflow: hidden;
   }
 
   & > * {
