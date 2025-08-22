@@ -12,6 +12,7 @@ function init() {
   setupHouseSaleInputs();
   setupMonthlyHomeExpensesInputs();
 
+  setupInputListeners();
   setupHomeCosts();
 }
 
@@ -50,7 +51,7 @@ function setupHouseSaleInputs() {
   houseExpensesHeaderElement.innerText = "Home Purchase Expenses";
   houseSalesContainerElement.appendChild(houseExpensesHeaderElement);
 
-  const principalElement = getCurrencyTextInput(INPUTS.PRINCIPAL);
+  const principalElement = getCurrencyTextInput(INPUTS.HOME_SALE_PRICE);
   const downPaymentAmountElement = getCurrencyTextInput(INPUTS.DOWN_PAYMENT_AMOUNT);
   const mortgageRateElement = getPercentTextInput(INPUTS.MORTGAGE_RATE);
 
@@ -86,6 +87,85 @@ function setupTaxRateInput() {
   const taxRateElement = getDecimalNumberInput(INPUTS.TAX_RATE);
 
   return taxRateElement;
+}
+
+function setupInputListeners() {
+  const enterAmountsEl = document.getElementById("inputs");
+  if (!enterAmountsEl) return;
+
+  enterAmountsEl.addEventListener("input", (event) => {
+    const target = event.currentTarget as HTMLInputElement;
+
+    const savingsInputElement = document.getElementById(INPUTS.SAVINGS.id) as HTMLInputElement;
+    const expensesInputElement = document.getElementById(INPUTS.MONTHLY_EXPENSES.id) as HTMLInputElement; 
+
+    const homeSalePriceInputElement = document.getElementById(INPUTS.HOME_SALE_PRICE.id) as HTMLInputElement;
+    const downPaymentInputElement = document.getElementById(INPUTS.DOWN_PAYMENT_AMOUNT.id) as HTMLInputElement;
+    const mortgageRateInputElement = document.getElementById(INPUTS.MORTGAGE_RATE.id) as HTMLInputElement;
+    
+    const homeSalePrice = parseInt(homeSalePriceInputElement.value.replace(/[^0-9]/g, ""));
+    const downPayment = parseInt(downPaymentInputElement.value.replace(/[^0-9]/g, ""));
+    const annualRate = parseFloat(mortgageRateInputElement.value.replace(/[^0-9.]/g, ""));
+
+    let totalMonthlyHousingCosts: number = 0;
+
+    if (homeSalePrice && downPayment && annualRate) {
+      const mortgageCostElement = document.getElementById("mortgage-cost");
+      
+      if (!mortgageCostElement) return;
+
+      const monthlyMortgagePayment = calculateMonthlyMortgagePayment({
+        principal: (homeSalePrice - downPayment),
+        annualRate,
+        termYears: 30
+      });
+
+      totalMonthlyHousingCosts += monthlyMortgagePayment;
+
+      mortgageCostElement.innerHTML = UsDollar.format(monthlyMortgagePayment);
+    }
+
+    const taxRateInputElement = document.getElementById(INPUTS.TAX_RATE.id) as HTMLInputElement;
+    const taxRate = parseFloat(taxRateInputElement.value.replace(/[^0-9.]/g, ""));
+
+    if (homeSalePrice && downPayment && taxRate) {
+      const taxRateCostElement = document.getElementById("monthly-taxes-cost");
+
+      if (!taxRateCostElement) return;
+
+      const monthlyTaxes = calculateMonthlyTaxes({principal: (homeSalePrice - downPayment), taxRate});
+      
+      totalMonthlyHousingCosts += monthlyTaxes;
+
+      taxRateCostElement.innerHTML = UsDollar.format(monthlyTaxes);
+    }
+
+    const monthlyPMIInputElement = document.getElementById(INPUTS.MONTHLY_PMI.id) as HTMLInputElement;
+    const homeownersInsuranceInputElement = document.getElementById(INPUTS.HOMEOWNERS_INSURANCE.id) as HTMLInputElement;
+
+    const monthlyPMI = parseInt(monthlyPMIInputElement.value.replace(/[^0-9]/g, ""));
+    const homeownersInsurance = parseInt(homeownersInsuranceInputElement.value.replace(/[^0-9]/g, ""));
+
+    if (monthlyPMI || homeownersInsurance) {
+      const additionalExpensesElement = document.getElementById("additional-expenses-cost");
+
+      if (!additionalExpensesElement) return;
+
+      const additionalExpenses = (monthlyPMI || 0) + (homeownersInsurance || 0);
+
+      totalMonthlyHousingCosts += additionalExpenses;
+
+      additionalExpensesElement.innerHTML = UsDollar.format(additionalExpenses);
+    }
+
+    if (totalMonthlyHousingCosts > 0) {
+      const totalMonthlyHousingCostsElement = document.getElementById("total-monthly-housing-cost");
+      if (!totalMonthlyHousingCostsElement) return;
+
+      totalMonthlyHousingCostsElement.innerHTML = UsDollar.format(totalMonthlyHousingCosts);
+    }
+
+  });
 }
 
 function calculateBudget() {
@@ -125,6 +205,11 @@ function calculateMonthlyMortgagePayment({
     (Math.pow(1 + monthlyRate, numberOfPayments) - 1);
 
   return Number(monthlyPayment.toFixed(2));
+}
+
+function calculateMonthlyTaxes({principal, taxRate}: {principal: number; taxRate: number}) {
+  const monthlyTax = (((principal/2) /1000) * taxRate) / 12;
+  return Number(monthlyTax.toFixed(2));
 }
 
 window.onload = init;

@@ -101,8 +101,41 @@ export function setupHomeCosts() {
   mortgageCostElement.id = "mortgage-cost";
   mortgageCostElement.classList.add("cost-value");
 
+  const monthlyTaxesLabelElement = document.createElement("div");
+  monthlyTaxesLabelElement.id = "label-monthly-taxes-cost";
+  monthlyTaxesLabelElement.classList.add("label-cost-value");
+  monthlyTaxesLabelElement.innerText = "Tax Amount";
+
+  const monthlyTaxesElement = document.createElement("div");
+  monthlyTaxesElement.id = "monthly-taxes-cost";
+  monthlyTaxesElement.classList.add("cost-value");
+
+  const additionalExpensesLabelElement = document.createElement("div");
+  additionalExpensesLabelElement.id = "label-additional-expenses-cost";
+  additionalExpensesLabelElement.classList.add("label-cost-value");
+  additionalExpensesLabelElement.innerText = "Additional Expenses";
+
+  const additionalExpensesElement = document.createElement("div");
+  additionalExpensesElement.id = "additional-expenses-cost";
+  additionalExpensesElement.classList.add("cost-value");
+
+  const totalMonthlyHousingCostsLabelElement = document.createElement("div");
+  totalMonthlyHousingCostsLabelElement.id = "label-total-monthly-housing-cost";
+  totalMonthlyHousingCostsLabelElement.classList.add("label-cost-value");
+  totalMonthlyHousingCostsLabelElement.innerText = "Total";
+
+  const totalMonthlyHousingCostsElement = document.createElement("div");
+  totalMonthlyHousingCostsElement.id = "total-monthly-housing-cost";
+  totalMonthlyHousingCostsElement.classList.add("cost-value");
+
   homeCostsEl.appendChild(mortgageCostLabelElement);
   homeCostsEl.appendChild(mortgageCostElement);
+  homeCostsEl.appendChild(monthlyTaxesLabelElement);
+  homeCostsEl.appendChild(monthlyTaxesElement);
+  homeCostsEl.appendChild(additionalExpensesLabelElement);
+  homeCostsEl.appendChild(additionalExpensesElement);
+  homeCostsEl.appendChild(totalMonthlyHousingCostsLabelElement);
+  homeCostsEl.appendChild(totalMonthlyHousingCostsElement);
 }
 
 export function getCurrencyTextInput(input: Input) {

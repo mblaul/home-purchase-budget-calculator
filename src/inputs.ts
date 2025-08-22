@@ -26,9 +26,9 @@ const MONTHLY_EXPENSES: Input = {
   type: INPUT_TYPES.CURRENCY,
 }
 
-const PRINCIPAL: Input = {
-  id: "principal",
-  label: "Principal",
+const HOME_SALE_PRICE: Input = {
+  id: "sale-price",
+  label: "Sale Price",
   type: INPUT_TYPES.CURRENCY,
 }
 
@@ -65,7 +65,7 @@ const TAX_RATE: Input = {
 export const INPUTS = {
   SAVINGS,
   MONTHLY_EXPENSES,
-  PRINCIPAL,
+  HOME_SALE_PRICE,
   DOWN_PAYMENT_AMOUNT,
   MORTGAGE_RATE,
   MONTHLY_PMI,
@@ -76,7 +76,7 @@ export const INPUTS = {
 export const INPUT_IDS_TO_INPUTS = {
   [SAVINGS.id]: SAVINGS,
   [MONTHLY_EXPENSES.id]: MONTHLY_EXPENSES,
-  [PRINCIPAL.id]: PRINCIPAL,
+  [HOME_SALE_PRICE.id]: HOME_SALE_PRICE,
   [DOWN_PAYMENT_AMOUNT.id]: DOWN_PAYMENT_AMOUNT,
   [MORTGAGE_RATE.id]: MORTGAGE_RATE,
   [MONTHLY_PMI.id]: MONTHLY_PMI,
@@ -100,6 +100,34 @@ export const INPUT_TYPES_TO_STRING_FORMATTERS = {
 
     return result;
   },
-  [INPUT_TYPES.CURRENCY]: (value: number) => Decimal.format(value / 100),
+  [INPUT_TYPES.CURRENCY]: (value: number) => Integer.format(value),
+} as const;
+
+export const INPUT_TYPES_TO_NUMBER_FORMATTERS = {
+  [INPUT_TYPES.WHOLE_NUMBER]: parseInt,
+  [INPUT_TYPES.DECIMAL]: (value: string) => parseInt(value) / 100,
+  [INPUT_TYPES.PERCENT]: (value: string) => {
+    let result;
+    let intValue = parseInt(value);
+    
+    if (intValue < 0) {
+      result = Decimal.format(0);
+    } else  if (intValue > 10_000) {
+      result = Decimal.format(100);
+    } else {
+      result = Decimal.format(intValue / 100);
+    }
+
+    return result;
+  },
+  [INPUT_TYPES.CURRENCY]: (value: string) => parseInt(value) / 100,
 } as const;
 type INPUT_TYPES_TO_STRING_FORMATTERS = typeof INPUT_TYPES_TO_STRING_FORMATTERS[keyof typeof INPUT_TYPES_TO_STRING_FORMATTERS];
+
+type Value = {
+  stringValue: string;
+  numberValue: number;
+  formattedValue: string;
+}
+
+const VALUE_STORE: Record<string, Value> = {};

@@ -2,6 +2,9 @@
   "name": "home-purchase-budget-calculator",
   "module": "index.ts",
   "type": "module",
+  "scripts": {
+    "watch": "bun build ./src/index.ts --outdir ./build --watch --sourcemap"
+  },
   "devDependencies": {
     "@types/bun": "latest"
   },
